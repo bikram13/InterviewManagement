@@ -1,0 +1,4 @@
+"Candidate ID","Candidate Name","Email","PSNo","Interviewer Name","Technical Feedback","Domain Feedback","Comm Skills Feedback","Final Result"
+"101","candidate2 candidate2LN","candidate2@example.com","222223","User2 User2LN","Not good in Technical skills","No domain knowledge","Good Communiation skills","Rejected"
+"102","candidate3 candidate3LN","candidate3@example.com","222224","User1 User1LN","Not good in Technical skills","Good domain knowledge","Good Communiation skills","On Hold"
+"100","candidate1 candidate1LN","candidate1@example.com","222222","User1 User1LN","Good in Java, Hibernate and Spring","Aware of Insurance domain","Good Communiation skills","Selected"
