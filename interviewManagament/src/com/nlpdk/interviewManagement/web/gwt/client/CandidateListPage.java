@@ -256,38 +256,59 @@ public class CandidateListPage extends Composite {
         addDialog.setText("Add Candidate");
 
         // Input fields for candidate details
-        Label firstNameLabel = new Label("First Name:");
-        TextBox firstNameTextBox = new TextBox();
+        HorizontalPanel namePanel = new HorizontalPanel();
+        Label nameLabel = new Label("First Name:");
+        TextBox nameTextBox = new TextBox();
+        namePanel.add(nameLabel);
+        namePanel.add(nameTextBox);
+
+        HorizontalPanel lastNamePanel = new HorizontalPanel();
         Label lastNameLabel = new Label("Last Name:");
         TextBox lastNameTextBox = new TextBox();
+        lastNamePanel.add(lastNameLabel);
+        lastNamePanel.add(lastNameTextBox);
+
+        HorizontalPanel emailPanel = new HorizontalPanel();
         Label emailLabel = new Label("Email:");
         TextBox emailTextBox = new TextBox();
+        emailPanel.add(emailLabel);
+        emailPanel.add(emailTextBox);
+
+        HorizontalPanel psNoPanel = new HorizontalPanel();
         Label psNoLabel = new Label("PS No:");
         TextBox psNoTextBox = new TextBox();
+        psNoPanel.add(psNoLabel);
+        psNoPanel.add(psNoTextBox);
+
+        HorizontalPanel contactNoPanel = new HorizontalPanel();
         Label contactNoLabel = new Label("Contact No:");
         TextBox contactNoTextBox = new TextBox();
+        contactNoPanel.add(contactNoLabel);
+        contactNoPanel.add(contactNoTextBox);
+
+        HorizontalPanel profilePanel = new HorizontalPanel();
         Label profileLabel = new Label("Profile:");
         TextBox profileTextBox = new TextBox();
-        
-       
+        profilePanel.add(profileLabel);
+        profilePanel.add(profileTextBox);
+
         Button addButton = new Button("Add");
         addButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
                 // Get the candidate details from input fields
-                String firstName = firstNameTextBox.getText();
+                String firstName = nameTextBox.getText();
                 String lastName = lastNameTextBox.getText();
                 String email = emailTextBox.getText();
                 String psNo = psNoTextBox.getText();
                 String contactNo = contactNoTextBox.getText();
-                String profileFileName = profileTextBox.getText();
-
-                
+                String profile = profileTextBox.getText(); // Get the "Profile" text
 
                 // Create a new row in the candidate table and add candidate details
                 int row = candidateTable.getRowCount();
                 candidateTable.setText(row, 0, firstName + " " + lastName);
                 candidateTable.setText(row, 1, email);
+                candidateTable.setText(row, 6, profile); // Set the "Profile" text in the 6th column
 
                 // Add "Assign Interviewer" button for the newly added candidate
                 Button assignInterviewerButton = new Button("Assign Interviewer");
@@ -339,18 +360,12 @@ public class CandidateListPage extends Composite {
         // Layout for the add candidate dialog
         VerticalPanel dialogPanel = new VerticalPanel();
         dialogPanel.add(new HTML("<h3>Add Candidate</h3>"));
-        dialogPanel.add(firstNameLabel);
-        dialogPanel.add(firstNameTextBox);
-        dialogPanel.add(lastNameLabel);
-        dialogPanel.add(lastNameTextBox);
-        dialogPanel.add(emailLabel);
-        dialogPanel.add(emailTextBox);
-        dialogPanel.add(psNoLabel);
-        dialogPanel.add(psNoTextBox);
-        dialogPanel.add(contactNoLabel);
-        dialogPanel.add(contactNoTextBox);
-        dialogPanel.add(profileLabel);
-        dialogPanel.add(profileTextBox);
+        dialogPanel.add(namePanel);
+        dialogPanel.add(lastNamePanel);
+        dialogPanel.add(emailPanel);
+        dialogPanel.add(psNoPanel);
+        dialogPanel.add(contactNoPanel);
+        dialogPanel.add(profilePanel);
         dialogPanel.add(addButton);
         dialogPanel.add(closeButton);
 
@@ -360,6 +375,7 @@ public class CandidateListPage extends Composite {
         addDialog.center();
         addDialog.show();
     }
+
 
     
 
