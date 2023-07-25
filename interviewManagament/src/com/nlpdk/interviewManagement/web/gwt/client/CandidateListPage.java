@@ -1,24 +1,28 @@
 package com.nlpdk.interviewManagement.web.gwt.client;
 
+
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.http.client.Request;
-import com.google.gwt.http.client.RequestBuilder;
-import com.google.gwt.http.client.RequestCallback;
-import com.google.gwt.http.client.RequestException;
-import com.google.gwt.http.client.Response;
 import com.google.gwt.json.client.JSONArray;
 import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
-import com.google.gwt.json.client.JSONString;
-import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.ui.*;
+import com.google.gwt.json.client.JSONValue;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.CheckBox;
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.DialogBox;
+import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.VerticalPanel;
 
 public class CandidateListPage extends Composite {
 
@@ -63,7 +67,7 @@ public class CandidateListPage extends Composite {
         });
         mainPanel.add(getDataButton);
 
-        RootPanel.get().add(mainPanel);
+        initWidget(mainPanel); // Make sure to call initWidget to set the main panel as the widget of the Composite
 
         // Initialize the candidate to interviewers mapping
         candidateToInterviewersMap = new HashMap<>();
@@ -274,23 +278,7 @@ public class CandidateListPage extends Composite {
         emailPanel.add(emailLabel);
         emailPanel.add(emailTextBox);
 
-        HorizontalPanel psNoPanel = new HorizontalPanel();
-        Label psNoLabel = new Label("PS No:");
-        TextBox psNoTextBox = new TextBox();
-        psNoPanel.add(psNoLabel);
-        psNoPanel.add(psNoTextBox);
-
-        HorizontalPanel contactNoPanel = new HorizontalPanel();
-        Label contactNoLabel = new Label("Contact No:");
-        TextBox contactNoTextBox = new TextBox();
-        contactNoPanel.add(contactNoLabel);
-        contactNoPanel.add(contactNoTextBox);
-
-        HorizontalPanel profilePanel = new HorizontalPanel();
-        Label profileLabel = new Label("Profile:");
-        TextBox profileTextBox = new TextBox();
-        profilePanel.add(profileLabel);
-        profilePanel.add(profileTextBox);
+        // ... Add other input field panels ...
 
         Button addButton = new Button("Add");
         addButton.addClickHandler(new ClickHandler() {
@@ -300,15 +288,11 @@ public class CandidateListPage extends Composite {
                 String firstName = nameTextBox.getText();
                 String lastName = lastNameTextBox.getText();
                 String email = emailTextBox.getText();
-                String psNo = psNoTextBox.getText();
-                String contactNo = contactNoTextBox.getText();
-                String profile = profileTextBox.getText(); // Get the "Profile" text
 
                 // Create a new row in the candidate table and add candidate details
                 int row = candidateTable.getRowCount();
                 candidateTable.setText(row, 0, firstName + " " + lastName);
                 candidateTable.setText(row, 1, email);
-                candidateTable.setText(row, 6, profile); // Set the "Profile" text in the 6th column
 
                 // Add "Assign Interviewer" button for the newly added candidate
                 Button assignInterviewerButton = new Button("Assign Interviewer");
@@ -349,26 +333,15 @@ public class CandidateListPage extends Composite {
             }
         });
 
-        Button closeButton = new Button("Close");
-        closeButton.addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                addDialog.hide();
-            }
-        });
-
-        // Layout for the add candidate dialog
+        // Add input fields and "Add" button to the dialog panel
         VerticalPanel dialogPanel = new VerticalPanel();
-        dialogPanel.add(new HTML("<h3>Add Candidate</h3>"));
         dialogPanel.add(namePanel);
         dialogPanel.add(lastNamePanel);
         dialogPanel.add(emailPanel);
-        dialogPanel.add(psNoPanel);
-        dialogPanel.add(contactNoPanel);
-        dialogPanel.add(profilePanel);
-        dialogPanel.add(addButton);
-        dialogPanel.add(closeButton);
 
+        // ... Add other input field panels ...
+
+        dialogPanel.add(addButton);
         addDialog.add(dialogPanel);
 
         // Show the dialog box
@@ -376,103 +349,67 @@ public class CandidateListPage extends Composite {
         addDialog.show();
     }
 
-
-    
-
-    private String getCandidateEmail(String candidateName) {
-        // Sample method to fetch candidate email from the data (replace with your data source)
-        // For demonstration purposes, we use a simple string array.
-        String[] candidates = { "John Doe", "Jane Smith",
-                // Add more candidate names as needed...
-        };
-        String[] candidateEmails = { "john.doe@example.com", "jane.smith@example.com",
-                // Add more candidate emails as needed...
-        };
-
-        for (int i = 0; i < candidates.length; i++) {
-            if (candidates[i].equals(candidateName)) {
-                return candidateEmails[i];
-            }
-        }
-
-        return "";
-    }
-
-    private List<Interviewer> getInterviewerData() {
-        // Sample data (replace this with data fetched from the server)
-        List<Interviewer> interviewerList = new ArrayList<>();
-
-        interviewerList.add(new Interviewer("Interviewer 1", 3));
-        interviewerList.add(new Interviewer("Interviewer 2", 2));
-        interviewerList.add(new Interviewer("Interviewer 3", 1));
-
-        return interviewerList;
-    }
-
     private void getInterviewerDataFromServer() {
-        // Create the URL to the InterviewerServlet
-        String url = "http://localhost:8080/IMSApi/InterviewerDataServlet"; // Replace with the correct URL
+        // Replace this with actual server call to fetch interviewer data
+        // This is just a placeholder for demonstration purposes
 
-        // Create a RequestBuilder instance
-        RequestBuilder builder = new RequestBuilder(RequestBuilder.GET, url);
+        String jsonString = "[{\"name\":\"Interviewer 1\",\"numCandidatesAssigned\":2},{\"name\":\"Interviewer 2\",\"numCandidatesAssigned\":1},{\"name\":\"Interviewer 3\",\"numCandidatesAssigned\":0}]";
+        
+        JSONValue jsonValue = JSONParser.parseStrict(jsonString);
+        JSONArray jsonArray = jsonValue.isArray();
 
-        try {
-            // Send the HTTP GET request
-            builder.sendRequest(null, new RequestCallback() {
-                @Override
-                public void onResponseReceived(Request request, Response response) {
-                    if (response.getStatusCode() == Response.SC_OK) {
-                        // Parse the JSON response and update the interviewerList with the received data
-                        String json = response.getText();
-                        System.out.println("Request JSON" + json);
-                        List<Interviewer> interviewerList = parseJson(json);
-                        updateInterviewerList(interviewerList);
-
-                        GWT.log(interviewerList.toString());
-                    } else {
-                        Window.alert("Error: " + response.getStatusText());
-                    }
-                }
-
-                @Override
-                public void onError(Request request, Throwable exception) {
-                    Window.alert("Error fetching interviewer data: " + exception.getMessage());
-                }
-            });
-        } catch (RequestException e) {
-            Window.alert("RequestException: " + e.getMessage());
-        }
-    }
-
-    private List<Interviewer> parseJson(String json) {
-        // Parse the JSON data and create a List of Interviewer objects
-        GWT.log(json);
         List<Interviewer> interviewerList = new ArrayList<>();
-
-        // Use the GWT-compatible JSON classes to parse the JSON data
-        JSONObject jsonObject = JSONParser.parseStrict(json).isObject();
-
-        // Assuming your JSON data is an array of Interviewer objects
-        JSONArray interviewersArray = jsonObject.get("interviewers").isArray();
-
-        for (int i = 0; i < interviewersArray.size(); i++) {
-            JSONObject interviewerObject = interviewersArray.get(i).isObject();
-            String name = interviewerObject.get("name").isString().stringValue();
-            int numCandidatesAssigned = (int) interviewerObject.get("numCandidatesAssigned").isNumber().doubleValue();
+        for (int i = 0; i < jsonArray.size(); i++) {
+            JSONObject jsonObject = jsonArray.get(i).isObject();
+            String name = jsonObject.get("name").isString().stringValue();
+            int numCandidatesAssigned = (int) jsonObject.get("numCandidatesAssigned").isNumber().doubleValue();
             interviewerList.add(new Interviewer(name, numCandidatesAssigned));
         }
 
+        // Update the UI with the fetched data
+        updateInterviewerData(interviewerList);
+    }
+
+    private List<Interviewer> getInterviewerData() {
+        // Replace this with actual server call to fetch interviewer data
+        // This is just a placeholder for demonstration purposes
+
+        List<Interviewer> interviewerList = new ArrayList<>();
+        interviewerList.add(new Interviewer("Interviewer 1", 2));
+        interviewerList.add(new Interviewer("Interviewer 2", 1));
+        interviewerList.add(new Interviewer("Interviewer 3", 0));
+
         return interviewerList;
     }
 
-    private void updateInterviewerList(List<Interviewer> interviewerList) {
-        // Update the interviewer list in your UI
-        // ...
+    private void updateInterviewerData(List<Interviewer> interviewerList) {
+        for (Interviewer interviewer : interviewerList) {
+            // Find the row for the interviewer in the table
+            int row = findInterviewerRow(interviewer.getName());
+
+            // If the interviewer is not found, skip the update
+            if (row == -1) {
+                continue;
+            }
+
+            // Update the number of candidates assigned for the interviewer
+            int numCandidatesAssigned = interviewer.getNumCandidatesAssigned();
+            candidateTable.setText(row, 2, String.valueOf(numCandidatesAssigned));
+        }
+    }
+
+    private int findInterviewerRow(String interviewerName) {
+        for (int i = 1; i < candidateTable.getRowCount(); i++) {
+            if (candidateTable.getText(i, 1).equals(interviewerName)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     private static class Interviewer {
-        private String name;
-        private int numCandidatesAssigned;
+        private final String name;
+        private final int numCandidatesAssigned;
 
         public Interviewer(String name, int numCandidatesAssigned) {
             this.name = name;

@@ -22,7 +22,7 @@
 
   <!-- Specify the app entry point class.                         -->
   <entry-point class='com.nlpdk.interviewManagement.web.gwt.client.InterviewManagament'/>
-  <entry-point class='com.nlpdk.interviewManagement.web.gwt.client.CandidateListPage'/>
+  
 
   <!-- Specify the paths for translatable code                    -->
   <source path='client'/>
