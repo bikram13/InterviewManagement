@@ -8,13 +8,16 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.http.client.Request;
 import com.google.gwt.http.client.RequestBuilder;
+import com.google.gwt.http.client.RequestCallback;
+import com.google.gwt.http.client.RequestException;
+import com.google.gwt.http.client.Response;
 import com.google.gwt.json.client.JSONArray;
 import com.google.gwt.json.client.JSONNumber;
 import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
 import com.google.gwt.json.client.JSONString;
-import com.google.gwt.json.client.JSONValue;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.CheckBox;
@@ -50,10 +53,8 @@ public class CandidateListPage extends Composite {
 		candidateToInterviewersMap = new HashMap<>();
 
 		// For demonstration, add some sample data to the candidates list
-		candidates.add(new Candidate(100, "John Doe", "john.doe@example.com", "PS001", "1234567890", null, null, null,
-				null, null));
-		candidates.add(new Candidate(101, "Jane Smith", "jane.smith@example.com", "PS002", "9876543210", null, null,
-				null, null, null));
+		candidates.add(new Candidate(100, "John Doe", "john.doe@example.com", "PS001", "1234567890", null));
+		candidates.add(new Candidate(101, "Jane Smith", "jane.smith@example.com", "PS002", "9876543210", null));
 
 		populateCandidateTable();
 		// Populate the "Feedback" column for existing candidates
@@ -75,16 +76,53 @@ public class CandidateListPage extends Composite {
 			Candidate candidate = candidates.get(i);
 			String candidateName = candidate.getName();
 			Anchor feedbackLink = new Anchor("Feedback");
-			feedbackLink.addClickHandler(event -> showFeedbackDialog(candidate));
+			feedbackLink.addClickHandler(event -> getFeedbackDataForCandidate(candidate));
 			candidateTable.setWidget(i + 1, 6, feedbackLink);
 		}
 	}
 
-	private void showFeedbackDialog(Candidate candidate) {
-		// Fetch feedback data from the backend service (replace this with actual
-		// service call)
-		List<FeedbackData> feedbackDataList = getFeedbackDataForCandidate(candidate);
+	private void getFeedbackDataForCandidate(Candidate candidate) {
+		String action = "getFeedbackData";
+		// Create a JSON object to store candidateId and candidateName
+		JSONObject requestDataObject = new JSONObject();
+		requestDataObject.put("candidateId", new JSONNumber(candidate.getCandidateId()));
+		requestDataObject.put("candidateName", new JSONString(candidate.getName()));
+		String requestData = requestDataObject.toString();
 
+		// Create the RequestBuilder for the POST request
+		RequestBuilder builder = new RequestBuilder(RequestBuilder.POST,
+				"http://localhost:8080/IMSApi/api?action=getFeedbackData");
+//		builder.setHeader("Content-Type", "application/json");
+
+		try {
+			// Send the request
+			builder.sendRequest(requestData, new RequestCallback() {
+				@Override
+				public void onResponseReceived(Request request, Response response) {
+					// Check if the request was successful (status code 200)
+					if (response.getStatusCode() == 200) {
+						// Handle the response
+						List<FeedbackData> feedbackDataList = parseFeedbackData(response.getText());
+						showFeedbackDialog(candidate, feedbackDataList);
+					} else {
+						// Handle the error
+						GWT.log("Error: " + response.getStatusText());
+					}
+				}
+
+				@Override
+				public void onError(Request request, Throwable throwable) {
+					// Handle the error
+					GWT.log("Error: " + throwable.getMessage());
+				}
+			});
+		} catch (RequestException e) {
+			// Handle the exception
+			GWT.log("Error: " + e.getMessage());
+		}
+	}
+
+	private void showFeedbackDialog(Candidate candidate, List<FeedbackData> feedbackDataList) {
 		// Show feedback data in tabular format
 		FlexTable feedbackTable = new FlexTable();
 		feedbackTable.setText(0, 0, "Interviewer Name");
@@ -121,32 +159,15 @@ public class CandidateListPage extends Composite {
 		feedbackDialog.show();
 	}
 
-	private List<FeedbackData> getFeedbackDataForCandidate(Candidate candidate) {
-		String action = "getFeedbackData"; // Replace this with the actual action for fetching feedback data
-
-		// Create a JSON object to store candidateId and candidateName
-		JSONObject requestDataObject = new JSONObject();
-		requestDataObject.put("candidateId", new JSONNumber(candidate.getCandidateId()));
-		requestDataObject.put("candidateName", new JSONString(candidate.getName()));
-		String requestData = requestDataObject.toString();
-
-		APIService apiService = new APIService();
-		String responseText = apiService.httpRequest(action, requestData, RequestBuilder.POST).toString();
-		GWT.log("Out:::::" + responseText);
-		// Parse the responseText and convert it to a list of FeedbackData objects
-		List<FeedbackData> feedbackDataList = parseFeedbackData(responseText);
-
-		return feedbackDataList;
-	}
-
 	private List<FeedbackData> parseFeedbackData(String responseText) {
 		List<FeedbackData> feedbackDataList = new ArrayList<>();
 
-		GWT.log("Test :::" + responseText);
 		// Parse the responseText and create FeedbackData objects
 		// Assuming the responseText is in JSON format
-		JSONValue jsonValue = JSONParser.parseStrict(responseText);
-		JSONArray jsonArray = jsonValue.isArray();
+		JSONObject jsonObject = JSONParser.parseStrict(responseText).isObject();
+//		String name = jsonObject.get("feedbackData").isString().stringValue();
+
+		JSONArray jsonArray = jsonObject.get("feedbackData").isArray();
 
 		if (jsonArray != null) {
 			for (int i = 0; i < jsonArray.size(); i++) {
@@ -181,11 +202,6 @@ public class CandidateListPage extends Composite {
 	}
 
 	private Candidate_Interviewer getCandidate_InterviewerFromJSON(JSONObject interviewerObject) {
-		// Parse the JSON object and create a Candidate_Interviewer object
-		// Assumes the JSON object contains fields like "candidate" and "interviewer"
-		// Replace these keys with the actual keys used in your backend response
-		// Assuming "candidate" is an object with fields like "name", "email", etc.
-		// Assuming "interviewer" is an object with fields like "name", "email", etc.
 		Candidate candidate = getCandidateFromJSON(interviewerObject.get("candidate").isObject());
 		Users interviewer = getUsersFromJSON(interviewerObject.get("interviewer").isObject());
 
@@ -193,34 +209,32 @@ public class CandidateListPage extends Composite {
 	}
 
 	private Candidate getCandidateFromJSON(JSONObject candidateObject) {
-		// Parse the JSON object and create a Candidate object
-		// Assumes the JSON object contains fields like "name", "email", etc.
-		// Replace these keys with the actual keys used in your backend response
-		String name = candidateObject.get("name").isString().stringValue();
-		String email = candidateObject.get("email").isString().stringValue();
+		String firstName = candidateObject.get("firstName").isString().stringValue();
+		String lastName = candidateObject.get("lastName").isString().stringValue();
+		String email = candidateObject.get("emailId").isString().stringValue();
 		String psNo = candidateObject.get("psNo").isString().stringValue();
 		String contactNo = candidateObject.get("contactNo").isString().stringValue();
+		int id = (int) candidateObject.get("id").isNumber().doubleValue();
 
-		return new Candidate(2, name, email, psNo, contactNo, null, contactNo, contactNo, contactNo, contactNo);
+		return new Candidate(id, firstName + " " + lastName, email, psNo, contactNo, null);
 	}
 
 	private Users getUsersFromJSON(JSONObject interviewerObject) {
 		// Parse the JSON object and create a Users object (interviewer)
 		// Assumes the JSON object contains fields like "name", "email", etc.
 		// Replace these keys with the actual keys used in your backend response
-		int id = Integer.valueOf(interviewerObject.get("name").isString().stringValue());
-		String firstName = interviewerObject.get("name").isString().stringValue();
-		String lastName = interviewerObject.get("name").isString().stringValue();
-		String nameemail = interviewerObject.get("name").isString().stringValue();
-		String email = interviewerObject.get("name").isString().stringValue();
-		String psNo = interviewerObject.get("name").isString().stringValue();
-		String role = interviewerObject.get("name").isString().stringValue();
-		String contactNo = interviewerObject.get("name").isString().stringValue();
-		String password = interviewerObject.get("name").isString().stringValue();
+		int id = (int) interviewerObject.get("id").isNumber().doubleValue();
+		String firstName = interviewerObject.get("firstName").isString().stringValue();
+		String lastName = interviewerObject.get("lastName").isString().stringValue();
+		String emailId = interviewerObject.get("emailId").isString().stringValue();
+		String psNo = interviewerObject.get("psNo").isString().stringValue();
+		String role = interviewerObject.get("role").isString().stringValue();
+		String contactNo = interviewerObject.get("contactNo").isString().stringValue();
+		String password = interviewerObject.get("password").isString().stringValue();
 		// Add other fields based on your response JSON structure
 
-		return new Users(id, firstName, lastName, email, psNo, role, contactNo, password); // Replace ... with other
-																							// fields as needed
+		return new Users(id, firstName, lastName, emailId, psNo, role, contactNo, password); // Replace ... with other
+																								// fields as needed
 	}
 
 	private void populateCandidateTable() {
@@ -253,39 +267,12 @@ public class CandidateListPage extends Composite {
 
 	private Widget createFeedbackLink(Candidate candidate) {
 		Anchor feedbackLink = new Anchor("Feedback");
-		feedbackLink.addClickHandler(event -> showFeedbackDialog(candidate));
+		feedbackLink.addClickHandler(event -> getFeedbackDataForCandidate(candidate));
 		return feedbackLink;
 	}
 
 	private boolean isCandidateAssigned(String candidateName) {
 		return candidateToInterviewersMap.containsKey(candidateName);
-	}
-
-	private String getAssignedInterviewer(String candidateName) {
-		List<String> interviewers = candidateToInterviewersMap.get(candidateName);
-		if (interviewers != null && !interviewers.isEmpty()) {
-			return interviewers.get(0); // For simplicity, return the first assigned interviewer
-		}
-		return null;
-	}
-
-	private String getAssignedInterviewersAsString(String candidateName, String selectedInterviewer) {
-		List<String> interviewers = candidateToInterviewersMap.get(candidateName);
-		if (interviewers == null || interviewers.isEmpty()) {
-			return "None";
-		}
-		StringBuilder stringBuilder = new StringBuilder();
-		for (String interviewer : interviewers) {
-			if (selectedInterviewer != null && interviewer.equals(selectedInterviewer)) {
-				stringBuilder.append("<b>").append(interviewer).append("</b>");
-			} else {
-				stringBuilder.append(interviewer);
-			}
-			stringBuilder.append(", ");
-		}
-		// Remove the trailing comma and space
-		stringBuilder.setLength(stringBuilder.length() - 2);
-		return stringBuilder.toString();
 	}
 
 	private void updateCandidateInterviewersLabel(String candidateName) {
@@ -458,11 +445,8 @@ public class CandidateListPage extends Composite {
 	}
 
 	private void addCandidate(String firstName, String lastName, String email, String psNo, String contactNumber) {
-		Candidate candidate = new Candidate(2, firstName + " " + lastName, email, psNo, contactNumber, null,
-				contactNumber, contactNumber, contactNumber, contactNumber);
+		Candidate candidate = new Candidate(2, firstName + " " + lastName, email, psNo, contactNumber, null);
 		candidates.add(candidate);
-		// Replace this with actual server call to add the candidate data
-		// For demonstration, we'll just populate the table locally
 		populateCandidateTable();
 	}
 }

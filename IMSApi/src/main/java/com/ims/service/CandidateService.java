@@ -1,26 +1,7 @@
 package com.ims.service;
 
-import com.ims.dao.CandidateDAO;
-import com.ims.model.Candidate;
+import com.ims.command.Command;
 
-import java.util.List;
+public interface CandidateService extends Command {
 
-public class CandidateService {
-    private CandidateDAO candidateDAO;
-
-    public CandidateService() {
-        candidateDAO = new CandidateDAO();
-    }
-
-    public void addCandidate(Candidate candidate) {
-        candidateDAO.addCandidate(candidate);
-    }
-
-    public List<Candidate> getAllCandidates() {
-        return candidateDAO.getAllCandidates();
-    }
-
-    public Candidate getCandidateById(long candidateId) {
-        return candidateDAO.getCandidateById(candidateId);
-    }
 }

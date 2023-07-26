@@ -81,8 +81,9 @@ public class LoginView extends Composite {
 		// Sample method to return a list of users (replace with actual user data
 		// retrieval logic)
 		List<Users> usersList = new ArrayList<>();
-		usersList.add(new Users(1, "John", "Doe", "a", "PS001", "assigner", "1234567890", "a"));
-		usersList.add(new Users(2, "Jane", "Smith", "root", "PS002", "interviewer", "9876543210", "root"));
+		usersList.add(new Users(1, "John", "Doe", "assigner", "PS001", "assigner", "1234567890", "assigner"));
+		usersList
+				.add(new Users(2, "Jane", "Smith", "interviewer", "PS002", "interviewer", "9876543210", "interviewer"));
 		return usersList;
 	}
 

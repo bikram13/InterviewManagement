@@ -1,14 +1,14 @@
 package com.ims.controller;
 
 import com.google.gson.Gson;
-import com.ims.model.Candidate;
-import com.ims.model.CandidateInterviewer;
-import com.ims.model.Feedback;
-import com.ims.model.Users;
-import com.ims.service.CandidateService;
-import com.ims.service.CandidateInterviewerService;
-import com.ims.service.FeedbackService;
-import com.ims.service.UsersService;
+import com.ims.entity.Candidate;
+import com.ims.entity.CandidateInterviewer;
+import com.ims.entity.Feedback;
+import com.ims.entity.Users;
+import com.ims.service.impl.CandidateInterviewerServiceImpl;
+import com.ims.service.impl.CandidateServiceImpl;
+import com.ims.service.impl.FeedbackServiceImpl;
+import com.ims.service.impl.UsersServiceImpl;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -23,10 +23,10 @@ import java.util.List;
 public class IMSControllerServlet1 extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	
-    private UsersService usersService;
-    private CandidateService candidateService;
-    private CandidateInterviewerService candidateInterviewerService;
-    private FeedbackService feedbackService;
+    private UsersServiceImpl usersService;
+    private CandidateServiceImpl candidateService;
+    private CandidateInterviewerServiceImpl candidateInterviewerService;
+    private FeedbackServiceImpl feedbackService;
 
     
     public IMSControllerServlet1() {
@@ -39,10 +39,10 @@ public class IMSControllerServlet1 extends HttpServlet {
     public void init() throws ServletException {
         super.init();
         // Initialize the service classes here
-        usersService = new UsersService();
-        candidateService = new CandidateService();
-        candidateInterviewerService = new CandidateInterviewerService();
-        feedbackService = new FeedbackService();
+        usersService = new UsersServiceImpl();
+        candidateService = new CandidateServiceImpl();
+        candidateInterviewerService = new CandidateInterviewerServiceImpl();
+        feedbackService = new FeedbackServiceImpl();
     }
 
     @Override

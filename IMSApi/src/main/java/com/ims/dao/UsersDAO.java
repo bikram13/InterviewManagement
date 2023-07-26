@@ -1,6 +1,6 @@
 package com.ims.dao;
 
-import com.ims.model.Users;
+import com.ims.entity.Users;
 import com.ims.util.HibernateUtil;
 import org.hibernate.Session;
 import org.hibernate.Transaction;

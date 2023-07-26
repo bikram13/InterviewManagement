@@ -1,6 +1,6 @@
 package com.ims.dao;
 
-import com.ims.model.Candidate;
+import com.ims.entity.Candidate;
 import com.ims.util.HibernateUtil;
 import org.hibernate.Session;
 import org.hibernate.Transaction;

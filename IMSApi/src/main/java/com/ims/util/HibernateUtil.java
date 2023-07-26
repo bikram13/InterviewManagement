@@ -6,10 +6,10 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 
-import com.ims.model.Candidate;
-import com.ims.model.CandidateInterviewer;
-import com.ims.model.Feedback;
-import com.ims.model.Users;
+import com.ims.entity.Candidate;
+import com.ims.entity.CandidateInterviewer;
+import com.ims.entity.Feedback;
+import com.ims.entity.Users;
 
 public class HibernateUtil {
     private static final SessionFactory sessionFactory = buildSessionFactory();
