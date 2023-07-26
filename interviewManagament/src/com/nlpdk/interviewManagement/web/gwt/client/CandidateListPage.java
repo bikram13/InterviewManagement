@@ -1,18 +1,21 @@
 package com.nlpdk.interviewManagement.web.gwt.client;
 
-
-
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.json.client.JSONArray;
+import com.google.gwt.json.client.JSONNumber;
 import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
+import com.google.gwt.json.client.JSONString;
 import com.google.gwt.json.client.JSONValue;
+import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
@@ -23,405 +26,443 @@ import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.Widget;
 
 public class CandidateListPage extends Composite {
 
-    private FlexTable candidateTable;
-    private Button addButton;
-    private Map<String, List<String>> candidateToInterviewersMap;
-
-    public CandidateListPage() {
-
-        candidateTable = new FlexTable();
-        candidateTable.setText(0, 0, "Candidate Name");
-        candidateTable.setText(0, 1, "Candidate Email");
-        candidateTable.setText(0, 2, "Assign"); // Renamed "Interview Panel" to "Assign"
-        candidateTable.setText(0, 3, "Delete");
-        candidateTable.setText(0, 4, "Evaluate");
-        candidateTable.setText(0, 5, "Interview Panel"); // New column for Interview Panel
-
-        // Sample data (you will fetch data from the server later)
-        addExistingCandidate("John Doe", "john.doe@example.com", new ArrayList<>());
-        addExistingCandidate("Jane Smith", "jane.smith@example.com", new ArrayList<>());
-
-        addButton = new Button("Add Candidate");
-        addButton.addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                showAddCandidateDialog();
-            }
-        });
-
-        VerticalPanel mainPanel = new VerticalPanel();
-        mainPanel.add(new HTML("<h2>Candidate List</h2>"));
-        mainPanel.add(candidateTable);
-        mainPanel.add(addButton);
-
-        // Button to call data from server
-        Button getDataButton = new Button("Get Interviewer Data");
-        getDataButton.addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                getInterviewerDataFromServer();
-            }
-        });
-        mainPanel.add(getDataButton);
-
-        initWidget(mainPanel); // Make sure to call initWidget to set the main panel as the widget of the Composite
-
-        // Initialize the candidate to interviewers mapping
-        candidateToInterviewersMap = new HashMap<>();
-    }
-
-    private void addExistingCandidate(String name, String email, List<String> interviewers) {
-        // Create a new row in the candidate table and add candidate details
-        int row = candidateTable.getRowCount();
-        candidateTable.setText(row, 0, name);
-        candidateTable.setText(row, 1, email);
-
-        // Add "Assign Interviewer" button for the existing candidate
-        Button assignInterviewerButton = new Button("Assign Interviewer");
-        assignInterviewerButton.addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                showCandidateDetailsDialog(name, email);
-            }
-        });
-        candidateTable.setWidget(row, 2, assignInterviewerButton);
-
-        // Add "Delete" button for the existing candidate (same as before)
-        Button deleteButton = new Button("Delete");
-        deleteButton.addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                removeCandidate(row);
-            }
-        });
-        candidateTable.setWidget(row, 3, deleteButton);
-
-        // Add "Evaluate" button for the existing candidate (same as before)
-        Button evaluateButton = new Button("Evaluate");
-        evaluateButton.addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                showEvaluateDialog(name); // Show the evaluation dialog box for the candidate
-            }
-        });
-        candidateTable.setWidget(row, 4, evaluateButton);
-
-        // Add a label to display the assigned interviewers
-        Label interviewersLabel = new Label(getAssignedInterviewersAsString(interviewers));
-        candidateTable.setWidget(row, 5, interviewersLabel);
-    }
-
-    private String getAssignedInterviewersAsString(List<String> interviewers) {
-        if (interviewers.isEmpty()) {
-            return "None";
-        }
-        return String.join(", ", interviewers);
-    }
-
-    private void showEvaluateDialog(String candidateName) {
-        // Create the evaluation dialog
-        DialogBox evaluateDialog = new DialogBox();
-        evaluateDialog.setText("Evaluate Candidate: " + candidateName);
-
-        // Create the form for evaluation
-        VerticalPanel dialogPanel = new VerticalPanel();
-
-        // Add fields and labels for evaluation (you can customize as needed)
-        TextBox technicalFeedback = new TextBox();
-        TextBox domainFeedback = new TextBox();
-        TextBox commSkills = new TextBox();
-        TextBox finalFeedback = new TextBox();
-        dialogPanel.add(new HTML("<b>Candidate Name:</b> " + candidateName));
-        dialogPanel.add(new Label("Technical Knowledge:"));
-        dialogPanel.add(technicalFeedback);
-        dialogPanel.add(new Label("Domain Knowledge:"));
-        dialogPanel.add(domainFeedback);
-        dialogPanel.add(new Label("Communication Skills:"));
-        dialogPanel.add(commSkills);
-        dialogPanel.add(new Label("Final Feedback:"));
-        dialogPanel.add(finalFeedback);
-
-        // Add a Submit button
-        Button submitButton = new Button("Submit");
-        submitButton.addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                // Add your logic to handle the submitted data here
-                evaluateDialog.hide(); // Close the dialog box upon clicking the Submit button
-            }
-        });
-        dialogPanel.add(submitButton);
-
-        evaluateDialog.add(dialogPanel);
-
-        // Show the dialog box
-        evaluateDialog.center();
-        evaluateDialog.show();
-    }
-
-    private void removeCandidate(int row) {
-        // Remove the candidate from the table
-        String candidateName = candidateTable.getText(row, 0);
-        candidateTable.removeRow(row);
-        candidateToInterviewersMap.remove(candidateName);
-    }
-
-    private void updateAssignInterviewerButton(int row, String candidateName, String candidateEmail) {
-        Button assignInterviewerButton = new Button("Assign Interviewer");
-
-        assignInterviewerButton.addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                showCandidateDetailsDialog(candidateName, candidateEmail);
-            }
-        });
-
-        candidateTable.setWidget(row, 2, assignInterviewerButton);
-    }
-
-    private void showCandidateDetailsDialog(String candidateName, String candidateEmail) {
-        // Create the candidate details dialog
-        DialogBox candidateDialog = new DialogBox();
-        candidateDialog.setText("Candidate Details: " + candidateName);
-
-        // Show candidate details
-        VerticalPanel dialogPanel = new VerticalPanel();
-        dialogPanel.add(new HTML("<b>Name:</b> " + candidateName));
-        dialogPanel.add(new HTML("<b>Email:</b> " + candidateEmail)); // Add the candidate's email
-
-        // Show available interviewers and number of candidates assigned
-        FlexTable interviewerTable = new FlexTable();
-        interviewerTable.setText(0, 0, "Select");
-        interviewerTable.setText(0, 1, "Interviewer Name");
-        interviewerTable.setText(0, 2, "Number of Candidates Assigned");
-
-        List<Interviewer> interviewerList = getInterviewerData();
-
-        for (int i = 0; i < interviewerList.size(); i++) {
-            Interviewer interviewer = interviewerList.get(i);
-
-            CheckBox selectCheckBox = new CheckBox();
-            interviewerTable.setWidget(i + 1, 0, selectCheckBox);
-
-            interviewerTable.setText(i + 1, 1, interviewer.getName());
-            interviewerTable.setText(i + 1, 2, String.valueOf(interviewer.getNumCandidatesAssigned()));
-        }
-
-        dialogPanel.add(new HTML("<h3>Assign Interviewer</h3>"));
-        dialogPanel.add(interviewerTable);
-
-        // Add Assign button at the bottom of the interviewer list
-        Button assignButton = new Button("Assign");
-        assignButton.addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                List<String> assignedInterviewers = new ArrayList<>();
-                for (int i = 1; i < interviewerTable.getRowCount(); i++) {
-                    CheckBox checkBox = (CheckBox) interviewerTable.getWidget(i, 0);
-                    if (checkBox.getValue()) {
-                        assignedInterviewers.add(interviewerTable.getText(i, 1));
-                    }
-                }
-                candidateToInterviewersMap.put(candidateName, assignedInterviewers);
-                updateCandidateInterviewersLabel(candidateName, assignedInterviewers);
-                candidateDialog.hide(); // Close the dialog box upon clicking the Assign button
-            }
-        });
-        dialogPanel.add(assignButton);
-
-        candidateDialog.add(dialogPanel);
-
-        // Show the dialog box
-        candidateDialog.center();
-        candidateDialog.show();
-    }
-
-    private void updateCandidateInterviewersLabel(String candidateName, List<String> assignedInterviewers) {
-        int row = findCandidateRow(candidateName);
-        Label interviewersLabel = new Label(getAssignedInterviewersAsString(assignedInterviewers));
-        candidateTable.setWidget(row, 5, interviewersLabel);
-    }
-
-    private int findCandidateRow(String candidateName) {
-        for (int i = 1; i < candidateTable.getRowCount(); i++) {
-            if (candidateTable.getText(i, 0).equals(candidateName)) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    private void showAddCandidateDialog() {
-        // Create the add candidate dialog
-        DialogBox addDialog = new DialogBox();
-        addDialog.setText("Add Candidate");
-
-        // Input fields for candidate details
-        HorizontalPanel namePanel = new HorizontalPanel();
-        Label nameLabel = new Label("First Name:");
-        TextBox nameTextBox = new TextBox();
-        namePanel.add(nameLabel);
-        namePanel.add(nameTextBox);
-
-        HorizontalPanel lastNamePanel = new HorizontalPanel();
-        Label lastNameLabel = new Label("Last Name:");
-        TextBox lastNameTextBox = new TextBox();
-        lastNamePanel.add(lastNameLabel);
-        lastNamePanel.add(lastNameTextBox);
-
-        HorizontalPanel emailPanel = new HorizontalPanel();
-        Label emailLabel = new Label("Email:");
-        TextBox emailTextBox = new TextBox();
-        emailPanel.add(emailLabel);
-        emailPanel.add(emailTextBox);
-
-        // ... Add other input field panels ...
-
-        Button addButton = new Button("Add");
-        addButton.addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                // Get the candidate details from input fields
-                String firstName = nameTextBox.getText();
-                String lastName = lastNameTextBox.getText();
-                String email = emailTextBox.getText();
-
-                // Create a new row in the candidate table and add candidate details
-                int row = candidateTable.getRowCount();
-                candidateTable.setText(row, 0, firstName + " " + lastName);
-                candidateTable.setText(row, 1, email);
-
-                // Add "Assign Interviewer" button for the newly added candidate
-                Button assignInterviewerButton = new Button("Assign Interviewer");
-                assignInterviewerButton.addClickHandler(new ClickHandler() {
-                    @Override
-                    public void onClick(ClickEvent event) {
-                        showCandidateDetailsDialog(firstName + " " + lastName, email);
-                    }
-                });
-                candidateTable.setWidget(row, 2, assignInterviewerButton);
-
-                // Add "Delete" button for the newly added candidate (same as before)
-                Button deleteButton = new Button("Delete");
-                deleteButton.addClickHandler(new ClickHandler() {
-                    @Override
-                    public void onClick(ClickEvent event) {
-                        removeCandidate(row);
-                    }
-                });
-                candidateTable.setWidget(row, 3, deleteButton); // Place the "Delete" button in the 3rd column
-
-                // Add "Evaluate" button for the newly added candidate (same as before)
-                Button evaluateButton = new Button("Evaluate");
-                evaluateButton.addClickHandler(new ClickHandler() {
-                    @Override
-                    public void onClick(ClickEvent event) {
-                        showEvaluateDialog(firstName + " " + lastName); // Show the evaluation dialog box for the candidate
-                    }
-                });
-                candidateTable.setWidget(row, 4, evaluateButton); // Place the "Evaluate" button in the 4th column
-
-                // Add label for the assigned interviewers (initially "None")
-                Label interviewersLabel = new Label("None");
-                candidateTable.setWidget(row, 5, interviewersLabel); // Place the label in the 5th column
-
-                // Close the dialog after adding the candidate
-                addDialog.hide();
-            }
-        });
-
-        // Add input fields and "Add" button to the dialog panel
-        VerticalPanel dialogPanel = new VerticalPanel();
-        dialogPanel.add(namePanel);
-        dialogPanel.add(lastNamePanel);
-        dialogPanel.add(emailPanel);
-
-        // ... Add other input field panels ...
-
-        dialogPanel.add(addButton);
-        addDialog.add(dialogPanel);
-
-        // Show the dialog box
-        addDialog.center();
-        addDialog.show();
-    }
-
-    private void getInterviewerDataFromServer() {
-        // Replace this with actual server call to fetch interviewer data
-        // This is just a placeholder for demonstration purposes
-
-        String jsonString = "[{\"name\":\"Interviewer 1\",\"numCandidatesAssigned\":2},{\"name\":\"Interviewer 2\",\"numCandidatesAssigned\":1},{\"name\":\"Interviewer 3\",\"numCandidatesAssigned\":0}]";
-        
-        JSONValue jsonValue = JSONParser.parseStrict(jsonString);
-        JSONArray jsonArray = jsonValue.isArray();
-
-        List<Interviewer> interviewerList = new ArrayList<>();
-        for (int i = 0; i < jsonArray.size(); i++) {
-            JSONObject jsonObject = jsonArray.get(i).isObject();
-            String name = jsonObject.get("name").isString().stringValue();
-            int numCandidatesAssigned = (int) jsonObject.get("numCandidatesAssigned").isNumber().doubleValue();
-            interviewerList.add(new Interviewer(name, numCandidatesAssigned));
-        }
-
-        // Update the UI with the fetched data
-        updateInterviewerData(interviewerList);
-    }
-
-    private List<Interviewer> getInterviewerData() {
-        // Replace this with actual server call to fetch interviewer data
-        // This is just a placeholder for demonstration purposes
-
-        List<Interviewer> interviewerList = new ArrayList<>();
-        interviewerList.add(new Interviewer("Interviewer 1", 2));
-        interviewerList.add(new Interviewer("Interviewer 2", 1));
-        interviewerList.add(new Interviewer("Interviewer 3", 0));
-
-        return interviewerList;
-    }
-
-    private void updateInterviewerData(List<Interviewer> interviewerList) {
-        for (Interviewer interviewer : interviewerList) {
-            // Find the row for the interviewer in the table
-            int row = findInterviewerRow(interviewer.getName());
-
-            // If the interviewer is not found, skip the update
-            if (row == -1) {
-                continue;
-            }
-
-            // Update the number of candidates assigned for the interviewer
-            int numCandidatesAssigned = interviewer.getNumCandidatesAssigned();
-            candidateTable.setText(row, 2, String.valueOf(numCandidatesAssigned));
-        }
-    }
-
-    private int findInterviewerRow(String interviewerName) {
-        for (int i = 1; i < candidateTable.getRowCount(); i++) {
-            if (candidateTable.getText(i, 1).equals(interviewerName)) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    private static class Interviewer {
-        private final String name;
-        private final int numCandidatesAssigned;
-
-        public Interviewer(String name, int numCandidatesAssigned) {
-            this.name = name;
-            this.numCandidatesAssigned = numCandidatesAssigned;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public int getNumCandidatesAssigned() {
-            return numCandidatesAssigned;
-        }
-    }
+	private FlexTable candidateTable;
+	private List<Candidate> candidates;
+	private Map<String, List<String>> candidateToInterviewersMap;
+	private Set<String> selectedInterviewers = new HashSet<>();
+
+	public CandidateListPage() {
+		candidateTable = new FlexTable();
+		candidateTable.setText(0, 0, "Candidate Name");
+		candidateTable.setText(0, 1, "Email ID");
+		candidateTable.setText(0, 2, "PS No");
+		candidateTable.setText(0, 3, "Contact Number");
+		candidateTable.setText(0, 4, "Assign");
+		candidateTable.setText(0, 5, "Interview Panel");
+		// Add "Feedback" column
+		candidateTable.setText(0, 6, "Feedback");
+
+		candidates = new ArrayList<>();
+		candidateToInterviewersMap = new HashMap<>();
+
+		// For demonstration, add some sample data to the candidates list
+		candidates.add(new Candidate(100, "John Doe", "john.doe@example.com", "PS001", "1234567890", null, null, null,
+				null, null));
+		candidates.add(new Candidate(101, "Jane Smith", "jane.smith@example.com", "PS002", "9876543210", null, null,
+				null, null, null));
+
+		populateCandidateTable();
+		// Populate the "Feedback" column for existing candidates
+		populateFeedbackColumn();
+
+		VerticalPanel mainPanel = new VerticalPanel();
+		mainPanel.add(new HTML("<h2>Candidate List</h2>"));
+		mainPanel.add(candidateTable);
+
+		Button addButton = new Button("Add Candidate");
+		addButton.addClickHandler(event -> showAddCandidateDialog());
+		mainPanel.add(addButton);
+
+		initWidget(mainPanel);
+	}
+
+	private void populateFeedbackColumn() {
+		for (int i = 0; i < candidates.size(); i++) {
+			Candidate candidate = candidates.get(i);
+			String candidateName = candidate.getName();
+			Anchor feedbackLink = new Anchor("Feedback");
+			feedbackLink.addClickHandler(event -> showFeedbackDialog(candidate));
+			candidateTable.setWidget(i + 1, 6, feedbackLink);
+		}
+	}
+
+	private void showFeedbackDialog(Candidate candidate) {
+		// Fetch feedback data from the backend service (replace this with actual
+		// service call)
+		List<FeedbackData> feedbackDataList = getFeedbackDataForCandidate(candidate);
+
+		// Show feedback data in tabular format
+		FlexTable feedbackTable = new FlexTable();
+		feedbackTable.setText(0, 0, "Interviewer Name");
+		feedbackTable.setText(0, 1, "Tech Feedback");
+		feedbackTable.setText(0, 2, "Domain Feedback");
+		feedbackTable.setText(0, 3, "Comm Skills Feedback");
+		feedbackTable.setText(0, 4, "Final Result");
+
+		for (int i = 0; i < feedbackDataList.size(); i++) {
+			FeedbackData feedbackData = feedbackDataList.get(i);
+			feedbackTable.setText(i + 1, 0, feedbackData.getCandidateInterviewer().getInterviewer().getFirstName());
+			feedbackTable.setText(i + 1, 1, feedbackData.getTechFeedback());
+			feedbackTable.setText(i + 1, 2, feedbackData.getDomainFeedback());
+			feedbackTable.setText(i + 1, 3, feedbackData.getCommSkillsFeedback());
+			feedbackTable.setText(i + 1, 4, feedbackData.getFinalResult());
+		}
+
+		// Create the feedback dialog
+		DialogBox feedbackDialog = new DialogBox();
+		feedbackDialog.setText("Candidate Feedback: " + candidate.getName());
+
+		VerticalPanel dialogPanel = new VerticalPanel();
+		dialogPanel.add(feedbackTable);
+
+		// Add a close button to close the dialog
+		Button closeButton = new Button("Close");
+		closeButton.addClickHandler(event -> feedbackDialog.hide());
+		dialogPanel.add(closeButton);
+
+		feedbackDialog.add(dialogPanel);
+
+		// Show the feedback dialog
+		feedbackDialog.center();
+		feedbackDialog.show();
+	}
+
+	private List<FeedbackData> getFeedbackDataForCandidate(Candidate candidate) {
+		String action = "getFeedbackData"; // Replace this with the actual action for fetching feedback data
+
+		// Create a JSON object to store candidateId and candidateName
+		JSONObject requestDataObject = new JSONObject();
+		requestDataObject.put("candidateId", new JSONNumber(candidate.getCandidateId()));
+		requestDataObject.put("candidateName", new JSONString(candidate.getName()));
+		String requestData = requestDataObject.toString();
+
+		APIService apiService = new APIService();
+		String responseText = apiService.httpRequest(action, requestData, RequestBuilder.POST).toString();
+		GWT.log("Out:::::" + responseText);
+		// Parse the responseText and convert it to a list of FeedbackData objects
+		List<FeedbackData> feedbackDataList = parseFeedbackData(responseText);
+
+		return feedbackDataList;
+	}
+
+	private List<FeedbackData> parseFeedbackData(String responseText) {
+		List<FeedbackData> feedbackDataList = new ArrayList<>();
+
+		GWT.log("Test :::" + responseText);
+		// Parse the responseText and create FeedbackData objects
+		// Assuming the responseText is in JSON format
+		JSONValue jsonValue = JSONParser.parseStrict(responseText);
+		JSONArray jsonArray = jsonValue.isArray();
+
+		if (jsonArray != null) {
+			for (int i = 0; i < jsonArray.size(); i++) {
+				JSONObject feedbackObject = jsonArray.get(i).isObject();
+				FeedbackData feedbackData = createFeedbackDataFromJSON(feedbackObject);
+				if (feedbackData != null) {
+					feedbackDataList.add(feedbackData);
+				}
+			}
+		}
+
+		return feedbackDataList;
+	}
+
+	private FeedbackData createFeedbackDataFromJSON(JSONObject feedbackObject) {
+		// Parse the JSON object and create a FeedbackData object
+		// Assumes the JSON object contains fields like "techFeedback",
+		// "domainFeedback", etc.
+		// Replace these keys with the actual keys used in your backend response
+		String techFeedback = feedbackObject.get("techFeedback").isString().stringValue();
+		String domainFeedback = feedbackObject.get("domainFeedback").isString().stringValue();
+		String commSkillsFeedback = feedbackObject.get("commSkillsFeedback").isString().stringValue();
+		String finalResult = feedbackObject.get("finalResult").isString().stringValue();
+
+		// Here you need to fetch the Candidate_Interviewer object from the JSON data
+		// Replace "getCandidate_InterviewerFromJSON" with the actual method to convert
+		// JSON to Candidate_Interviewer
+		Candidate_Interviewer candidateInterviewer = getCandidate_InterviewerFromJSON(
+				feedbackObject.get("candidateInterviewer").isObject());
+
+		return new FeedbackData(candidateInterviewer, techFeedback, domainFeedback, commSkillsFeedback, finalResult);
+	}
+
+	private Candidate_Interviewer getCandidate_InterviewerFromJSON(JSONObject interviewerObject) {
+		// Parse the JSON object and create a Candidate_Interviewer object
+		// Assumes the JSON object contains fields like "candidate" and "interviewer"
+		// Replace these keys with the actual keys used in your backend response
+		// Assuming "candidate" is an object with fields like "name", "email", etc.
+		// Assuming "interviewer" is an object with fields like "name", "email", etc.
+		Candidate candidate = getCandidateFromJSON(interviewerObject.get("candidate").isObject());
+		Users interviewer = getUsersFromJSON(interviewerObject.get("interviewer").isObject());
+
+		return new Candidate_Interviewer(candidate, interviewer);
+	}
+
+	private Candidate getCandidateFromJSON(JSONObject candidateObject) {
+		// Parse the JSON object and create a Candidate object
+		// Assumes the JSON object contains fields like "name", "email", etc.
+		// Replace these keys with the actual keys used in your backend response
+		String name = candidateObject.get("name").isString().stringValue();
+		String email = candidateObject.get("email").isString().stringValue();
+		String psNo = candidateObject.get("psNo").isString().stringValue();
+		String contactNo = candidateObject.get("contactNo").isString().stringValue();
+
+		return new Candidate(2, name, email, psNo, contactNo, null, contactNo, contactNo, contactNo, contactNo);
+	}
+
+	private Users getUsersFromJSON(JSONObject interviewerObject) {
+		// Parse the JSON object and create a Users object (interviewer)
+		// Assumes the JSON object contains fields like "name", "email", etc.
+		// Replace these keys with the actual keys used in your backend response
+		int id = Integer.valueOf(interviewerObject.get("name").isString().stringValue());
+		String firstName = interviewerObject.get("name").isString().stringValue();
+		String lastName = interviewerObject.get("name").isString().stringValue();
+		String nameemail = interviewerObject.get("name").isString().stringValue();
+		String email = interviewerObject.get("name").isString().stringValue();
+		String psNo = interviewerObject.get("name").isString().stringValue();
+		String role = interviewerObject.get("name").isString().stringValue();
+		String contactNo = interviewerObject.get("name").isString().stringValue();
+		String password = interviewerObject.get("name").isString().stringValue();
+		// Add other fields based on your response JSON structure
+
+		return new Users(id, firstName, lastName, email, psNo, role, contactNo, password); // Replace ... with other
+																							// fields as needed
+	}
+
+	private void populateCandidateTable() {
+		for (int i = 0; i < candidates.size(); i++) {
+			Candidate candidate = candidates.get(i);
+			candidateTable.setText(i + 1, 0, candidate.getName());
+			candidateTable.setText(i + 1, 1, candidate.getEmail());
+			candidateTable.setText(i + 1, 2, candidate.getPsNo());
+			candidateTable.setText(i + 1, 3, candidate.getContactNo());
+
+			if (isCandidateAssigned(candidate.getName())) {
+				// If an interviewer is assigned, disable the "Assign" button
+				Button assignInterviewerButton = (Button) candidateTable.getWidget(i + 1, 4);
+				assignInterviewerButton.setEnabled(false);
+			} else {
+				// If no interviewer is assigned, enable the "Assign" button
+				Button assignInterviewerButton = new Button("Assign Interviewer");
+				assignInterviewerButton.addClickHandler(event -> showCandidateDetailsDialog(candidate));
+				candidateTable.setWidget(i + 1, 4, assignInterviewerButton);
+			}
+
+			// Update the "Interview Panel" column
+			updateCandidateInterviewersLabel(candidate.getName());
+
+			// Add "Feedback" link for each candidate
+			candidateTable.setWidget(i + 1, 6, createFeedbackLink(candidate));
+
+		}
+	}
+
+	private Widget createFeedbackLink(Candidate candidate) {
+		Anchor feedbackLink = new Anchor("Feedback");
+		feedbackLink.addClickHandler(event -> showFeedbackDialog(candidate));
+		return feedbackLink;
+	}
+
+	private boolean isCandidateAssigned(String candidateName) {
+		return candidateToInterviewersMap.containsKey(candidateName);
+	}
+
+	private String getAssignedInterviewer(String candidateName) {
+		List<String> interviewers = candidateToInterviewersMap.get(candidateName);
+		if (interviewers != null && !interviewers.isEmpty()) {
+			return interviewers.get(0); // For simplicity, return the first assigned interviewer
+		}
+		return null;
+	}
+
+	private String getAssignedInterviewersAsString(String candidateName, String selectedInterviewer) {
+		List<String> interviewers = candidateToInterviewersMap.get(candidateName);
+		if (interviewers == null || interviewers.isEmpty()) {
+			return "None";
+		}
+		StringBuilder stringBuilder = new StringBuilder();
+		for (String interviewer : interviewers) {
+			if (selectedInterviewer != null && interviewer.equals(selectedInterviewer)) {
+				stringBuilder.append("<b>").append(interviewer).append("</b>");
+			} else {
+				stringBuilder.append(interviewer);
+			}
+			stringBuilder.append(", ");
+		}
+		// Remove the trailing comma and space
+		stringBuilder.setLength(stringBuilder.length() - 2);
+		return stringBuilder.toString();
+	}
+
+	private void updateCandidateInterviewersLabel(String candidateName) {
+		int row = findCandidateRow(candidateName);
+		List<String> assignedInterviewers = candidateToInterviewersMap.get(candidateName);
+		if (assignedInterviewers == null || assignedInterviewers.isEmpty()) {
+			candidateTable.setText(row, 5, "None");
+		} else {
+			String interviewerNames = String.join(", ", assignedInterviewers);
+			Label interviewersLabel = new Label(interviewerNames);
+			candidateTable.setWidget(row, 5, interviewersLabel);
+		}
+	}
+
+	private int findCandidateRow(String candidateName) {
+		for (int i = 1; i < candidateTable.getRowCount(); i++) {
+			if (candidateTable.getText(i, 0).equals(candidateName)) {
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	private void showCandidateDetailsDialog(Candidate candidate) {
+		// Create the candidate details dialog
+		DialogBox candidateDialog = new DialogBox();
+		candidateDialog.setText("Candidate Details: " + candidate.getName());
+
+		// Show candidate details
+		VerticalPanel dialogPanel = new VerticalPanel();
+		dialogPanel.add(new HTML("<b>Name:</b> " + candidate.getName()));
+		dialogPanel.add(new HTML("<b>Email:</b> " + candidate.getEmail()));
+		dialogPanel.add(new HTML("<b>PS No:</b> " + candidate.getPsNo()));
+		dialogPanel.add(new HTML("<b>Contact Number:</b> " + candidate.getContactNo()));
+
+		// Show available interviewers and number of candidates assigned
+		FlexTable interviewerTable = new FlexTable();
+		interviewerTable.setText(0, 0, "Select");
+		interviewerTable.setText(0, 1, "Interviewer Name");
+		interviewerTable.setText(0, 2, "Number of Candidates Assigned");
+
+		List<Interviewer> interviewerList = getInterviewerData();
+
+		for (int i = 0; i < interviewerList.size(); i++) {
+			Interviewer interviewer = interviewerList.get(i);
+
+			// Use CheckBox instead of Button
+			CheckBox selectCheckBox = new CheckBox();
+			selectCheckBox.addValueChangeHandler(event -> {
+				boolean isSelected = event.getValue();
+				if (isSelected) {
+					// Add the selected interviewer to the Set
+					selectedInterviewers.add(interviewer.getName());
+				} else {
+					// Remove the interviewer from the Set if it was deselected
+					selectedInterviewers.remove(interviewer.getName());
+				}
+			});
+
+			interviewerTable.setWidget(i + 1, 0, selectCheckBox);
+			interviewerTable.setText(i + 1, 1, interviewer.getName());
+			interviewerTable.setText(i + 1, 2, String.valueOf(interviewer.getNumCandidatesAssigned()));
+		}
+
+		dialogPanel.add(new HTML("<h3>Assign Interviewer</h3>"));
+		dialogPanel.add(interviewerTable);
+
+		// Add Submit and Close buttons
+		Button submitButton = new Button("Submit");
+		submitButton.addClickHandler(event -> {
+			assignInterviewersToCandidate(candidate.getName(), selectedInterviewers);
+			candidateDialog.hide();
+			// Repopulate the candidate table to update the "Assign" button
+			populateCandidateTable();
+		});
+
+		Button closeButton = new Button("Close");
+		closeButton.addClickHandler(event -> candidateDialog.hide());
+
+		HorizontalPanel buttonPanel = new HorizontalPanel();
+		buttonPanel.add(submitButton);
+		buttonPanel.add(closeButton);
+		dialogPanel.add(buttonPanel);
+
+		candidateDialog.add(dialogPanel);
+
+		// Show the dialog box
+		candidateDialog.center();
+		candidateDialog.show();
+	}
+
+	private void assignInterviewersToCandidate(String candidateName, Set<String> selectedInterviewers) {
+		if (selectedInterviewers.isEmpty()) {
+			candidateToInterviewersMap.remove(candidateName);
+		} else {
+			candidateToInterviewersMap.put(candidateName, new ArrayList<>(selectedInterviewers));
+		}
+		updateCandidateInterviewersLabel(candidateName);
+
+		// For demonstration, send the data to the server
+		sendAssignInterviewersDataToServer(candidateName, selectedInterviewers);
+	}
+
+	private void sendAssignInterviewersDataToServer(String candidateName, Set<String> selectedInterviewers) {
+		// Replace this with the actual server call to send the data to the backend
+		// For demonstration, we'll just print the data to the console
+		System.out.println(
+				"Candidate: " + candidateName + ", Selected Interviewers: " + String.join(", ", selectedInterviewers));
+	}
+
+	private List<Interviewer> getInterviewerData() {
+		// Replace this with actual server call to fetch interviewer data
+		// This is just a placeholder for demonstration purposes
+		List<Interviewer> interviewerList = new ArrayList<>();
+		interviewerList.add(new Interviewer("Interviewer 1", 2));
+		interviewerList.add(new Interviewer("Interviewer 2", 1));
+		interviewerList.add(new Interviewer("Interviewer 3", 0));
+		return interviewerList;
+	}
+
+	private void showAddCandidateDialog() {
+		// Create the add candidate dialog
+		DialogBox addCandidateDialog = new DialogBox();
+		addCandidateDialog.setText("Add Candidate");
+
+		// Create input fields for candidate data
+		VerticalPanel dialogPanel = new VerticalPanel();
+		TextBox firstNameTextBox = new TextBox();
+		TextBox lastNameTextBox = new TextBox();
+		TextBox emailTextBox = new TextBox();
+		TextBox psNoTextBox = new TextBox();
+		TextBox contactNumberTextBox = new TextBox();
+
+		dialogPanel.add(new Label("First Name:"));
+		dialogPanel.add(firstNameTextBox);
+		dialogPanel.add(new Label("Last Name:"));
+		dialogPanel.add(lastNameTextBox);
+		dialogPanel.add(new Label("Email ID:"));
+		dialogPanel.add(emailTextBox);
+		dialogPanel.add(new Label("PS No:"));
+		dialogPanel.add(psNoTextBox);
+		dialogPanel.add(new Label("Contact Number:"));
+		dialogPanel.add(contactNumberTextBox);
+
+		// Add buttons for adding the candidate and closing the dialog
+		Button addButton = new Button("Add");
+		addButton.addClickHandler(event -> {
+			String firstName = firstNameTextBox.getText();
+			String lastName = lastNameTextBox.getText();
+			String email = emailTextBox.getText();
+			String psNo = psNoTextBox.getText();
+			String contactNumber = contactNumberTextBox.getText();
+			addCandidate(firstName, lastName, email, psNo, contactNumber);
+			addCandidateDialog.hide();
+		});
+
+		Button closeButton = new Button("Close");
+		closeButton.addClickHandler(event -> addCandidateDialog.hide());
+
+		HorizontalPanel buttonPanel = new HorizontalPanel();
+		buttonPanel.add(addButton);
+		buttonPanel.add(closeButton);
+
+		dialogPanel.add(buttonPanel);
+		addCandidateDialog.add(dialogPanel);
+
+		// Show the add candidate dialog
+		addCandidateDialog.center();
+		addCandidateDialog.show();
+	}
+
+	private void addCandidate(String firstName, String lastName, String email, String psNo, String contactNumber) {
+		Candidate candidate = new Candidate(2, firstName + " " + lastName, email, psNo, contactNumber, null,
+				contactNumber, contactNumber, contactNumber, contactNumber);
+		candidates.add(candidate);
+		// Replace this with actual server call to add the candidate data
+		// For demonstration, we'll just populate the table locally
+		populateCandidateTable();
+	}
 }
