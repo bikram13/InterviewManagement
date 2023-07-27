@@ -5,28 +5,40 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.http.client.Request;
 import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.http.client.RequestCallback;
+import com.google.gwt.http.client.RequestException;
 import com.google.gwt.http.client.Response;
 import com.google.gwt.json.client.JSONArray;
+import com.google.gwt.json.client.JSONNumber;
 import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
+import com.google.gwt.json.client.JSONString;
 import com.google.gwt.json.client.JSONValue;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
 public class InterviewerCandidateListPage extends Composite {
 
 	private FlexTable candidateTable;
 	private Users user;
+	private int loggedInUserId;
 
 	public InterviewerCandidateListPage(Users user) {
 		this.user = user;
+		loggedInUserId = user.getId();
 		candidateTable = new FlexTable();
 		candidateTable.setText(0, 0, "Candidate ID");
 		candidateTable.setText(0, 1, "Candidate Name");
@@ -151,40 +163,134 @@ public class InterviewerCandidateListPage extends Composite {
 				candidateTable.setText(i + 1, 5, String.join(", ", interviewerNames));
 			}
 
-			// Add "Evaluate" button for each candidate
+			// Create a button to evaluate the candidate's feedback
 			Button evaluateButton = new Button("Evaluate");
-			evaluateButton.addClickHandler(event -> showFeedbackDialog(candidate));
+			evaluateButton.addClickHandler(new EvaluateButtonClickHandler(candidate));
 			candidateTable.setWidget(i + 1, 6, evaluateButton);
 		}
 	}
 
-	private void showFeedbackDialog(Candidate candidate) {
-		// Create the feedback dialog
+	private class EvaluateButtonClickHandler implements ClickHandler {
+		private Candidate candidate;
+
+		public EvaluateButtonClickHandler(Candidate candidate) {
+			this.candidate = candidate;
+		}
+
+		@Override
+		public void onClick(ClickEvent event) {
+			// Show the feedback form for evaluation
+			showFeedbackForm(candidate);
+		}
+	}
+
+	// ...
+
+	// ...
+
+	private void showFeedbackForm(Candidate candidate) {
+		// Create a dialog box to show the feedback form
 		DialogBox feedbackDialog = new DialogBox();
-		feedbackDialog.setText("Candidate Feedback: " + candidate.getName());
-
-		// Show feedback data in tabular format
-		FlexTable feedbackTable = new FlexTable();
-		feedbackTable.setText(0, 0, "Interviewer Name");
-		feedbackTable.setText(0, 1, "Tech Feedback");
-		feedbackTable.setText(0, 2, "Domain Feedback");
-		feedbackTable.setText(0, 3, "Comm Skills Feedback");
-		feedbackTable.setText(0, 4, "Final Result");
-
-		// Add rows and data for feedback received from backend
-
-		// Add a close button to close the dialog
-		Button closeButton = new Button("Close");
-		closeButton.addClickHandler(event -> feedbackDialog.hide());
+		feedbackDialog.setText("Candidate Feedback");
 
 		VerticalPanel dialogPanel = new VerticalPanel();
-		dialogPanel.add(feedbackTable);
-		dialogPanel.add(closeButton);
+		dialogPanel.add(new Label("Candidate ID: " + candidate.getCandidateId()));
+		dialogPanel.add(new Label("Candidate Name: " + candidate.getName()));
 
+		TextBox techFeedbackTextBox = new TextBox();
+		techFeedbackTextBox.getElement().setPropertyString("placeholder", "Technical Feedback");
+		dialogPanel.add(techFeedbackTextBox);
+
+		TextBox domainFeedbackTextBox = new TextBox();
+		domainFeedbackTextBox.getElement().setPropertyString("placeholder", "Domain Feedback");
+		dialogPanel.add(domainFeedbackTextBox);
+
+		TextBox commSkillsFeedbackTextBox = new TextBox();
+		commSkillsFeedbackTextBox.getElement().setPropertyString("placeholder", "Communication Skills Feedback");
+		dialogPanel.add(commSkillsFeedbackTextBox);
+
+		ListBox finalResultListBox = new ListBox();
+		finalResultListBox.addItem("Final Recommendation");
+		finalResultListBox.addItem("SELECTED");
+		finalResultListBox.addItem("REJECTED");
+		finalResultListBox.addItem("ON HOLD");
+		dialogPanel.add(new Label("Final Recommendation"));
+		dialogPanel.add(finalResultListBox);
+
+		Button submitButton = new Button("Submit");
+		submitButton.addClickHandler(event -> {
+			String techFeedback = techFeedbackTextBox.getText().trim();
+			String domainFeedback = domainFeedbackTextBox.getText().trim();
+			String commSkillsFeedback = commSkillsFeedbackTextBox.getText().trim();
+			String finalResult = finalResultListBox.getSelectedValue();
+
+			if (techFeedback.isEmpty() || domainFeedback.isEmpty() || commSkillsFeedback.isEmpty()
+					|| finalResult.isEmpty()) {
+				Window.alert("Please fill in all feedback fields and select the final result.");
+				return;
+			}
+
+			// Submit the feedback to the backend
+			submitFeedback(candidate, techFeedback, domainFeedback, commSkillsFeedback, finalResult);
+			feedbackDialog.hide();
+		});
+
+		Button closeButton = new Button("Close");
+		closeButton.addClickHandler(event -> {
+			feedbackDialog.hide();
+		});
+
+		HorizontalPanel buttonPanel = new HorizontalPanel();
+		buttonPanel.add(submitButton);
+		buttonPanel.add(closeButton);
+
+		dialogPanel.add(buttonPanel);
 		feedbackDialog.add(dialogPanel);
 
-		// Show the feedback dialog
+		feedbackDialog.setAnimationEnabled(true);
+		feedbackDialog.setGlassEnabled(true);
 		feedbackDialog.center();
-		feedbackDialog.show();
 	}
+
+	private void submitFeedback(Candidate candidate, String techFeedback, String domainFeedback,
+			String commSkillsFeedback, String finalResult) {
+		JSONObject feedbackJson = new JSONObject();
+		feedbackJson.put("candidateId", new JSONNumber(candidate.getCandidateId()));
+		feedbackJson.put("interviewerUserId", new JSONString(Integer.toString(loggedInUserId))); // Assuming you have
+																									// the interviewer's
+		// user ID stored
+
+		feedbackJson.put("techFeedback", new JSONString(techFeedback));
+		feedbackJson.put("domainFeedback", new JSONString(domainFeedback));
+		feedbackJson.put("commSkillsFeedback", new JSONString(commSkillsFeedback));
+		feedbackJson.put("finalResult", new JSONString(finalResult));
+
+		String jsonPayload = feedbackJson.toString();
+
+		RequestBuilder builder = new RequestBuilder(RequestBuilder.POST,
+				"http://localhost:8080/IMSApi/api?action=submitFeedback");
+		try {
+			builder.setHeader("Content-Type", "application/json");
+			builder.sendRequest(jsonPayload, new RequestCallback() {
+				@Override
+				public void onResponseReceived(Request request, Response response) {
+					if (response.getStatusCode() == 200) {
+						// Feedback submitted successfully, update the frontend
+						Window.alert("Feedback submitted successfully!");
+						fetchCandidateData(); // Reload the table with the latest data
+					} else {
+						Window.alert("Error submitting feedback: " + response.getStatusText());
+					}
+				}
+
+				@Override
+				public void onError(Request request, Throwable throwable) {
+					Window.alert("Error submitting feedback: " + throwable.getMessage());
+				}
+			});
+		} catch (RequestException e) {
+			Window.alert("Error submitting feedback: " + e.getMessage());
+		}
+	}
+
 }

@@ -15,6 +15,8 @@ public class CommandFactory {
 
 			case "login":
 				return new GetLoginDataCommand();
+			case "submitFeedback":
+				return new SubmitFeedbackCommand();
 
 			default:
 //	                    response.sendRedirect("index.jsp");
