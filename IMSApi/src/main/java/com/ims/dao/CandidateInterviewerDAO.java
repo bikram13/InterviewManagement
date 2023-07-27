@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.query.Query;
 
 import com.ims.entity.CandidateInterviewer;
 import com.ims.util.HibernateUtil;
@@ -80,6 +81,20 @@ public class CandidateInterviewerDAO {
 				transaction.rollback();
 			}
 			e.printStackTrace();
+		}
+	}
+
+	public List<CandidateInterviewer> getAllCandidateInterviewersByInterviewerId(Long interviewerId) {
+		try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+			// The following HQL query fetches the candidateInterviewers associated with the
+			// given interviewerId
+			String hql = "SELECT ci FROM CandidateInterviewer ci WHERE ci.interviewer.id = :interviewerId";
+			Query<CandidateInterviewer> query = session.createQuery(hql, CandidateInterviewer.class);
+			query.setParameter("interviewerId", interviewerId);
+			return query.list();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
 		}
 	}
 }

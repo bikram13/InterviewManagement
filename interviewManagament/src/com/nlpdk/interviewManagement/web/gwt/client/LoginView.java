@@ -5,6 +5,14 @@ import java.util.List;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.http.client.Request;
+import com.google.gwt.http.client.RequestBuilder;
+import com.google.gwt.http.client.RequestCallback;
+import com.google.gwt.http.client.RequestException;
+import com.google.gwt.http.client.Response;
+import com.google.gwt.json.client.JSONObject;
+import com.google.gwt.json.client.JSONParser;
+import com.google.gwt.json.client.JSONString;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HTML;
@@ -91,18 +99,58 @@ public class LoginView extends Composite {
 		String email = emailTextBox.getValue();
 		String password = passwordTextBox.getValue();
 
-		// Perform login validation (you can fetch user data from the server instead)
-		boolean isValidUser = validateUser(email, password);
+		// Prepare a JSON object with email and password
+		JSONObject loginDataObject = new JSONObject();
+		loginDataObject.put("email", new JSONString(email));
+		loginDataObject.put("password", new JSONString(password));
+		String loginData = loginDataObject.toString();
 
-		if (isValidUser) {
-			// Simulate user data (replace this with actual user data fetched from the
-			// server)
-			Users user = getUserByEmail(email);
+		// Create the RequestBuilder for the login request
+		RequestBuilder builder = new RequestBuilder(RequestBuilder.POST,
+				"http://localhost:8080/IMSApi/api?action=login");
 
-			// Call the loginHandler.onLoginSuccess method and pass the user object
-			loginHandler.onLoginSuccess(user);
-		} else {
+		try {
+			// Send the request
+//			builder.setHeader("Content-Type", "application/json");
+			builder.sendRequest(loginData, new RequestCallback() {
+				@Override
+				public void onResponseReceived(Request request, Response response) {
+					// Check if the request was successful (status code 200)
+					if (response.getStatusCode() == 200 && !response.getText().contains("Invalid")) {
+						// Handle the response
+						Users user = parseUserJSON(response.getText());
+						loginHandler.onLoginSuccess(user);
+					} else {
+						// Handle the error
+						loginHandler.onLoginFailure();
+					}
+				}
+
+				@Override
+				public void onError(Request request, Throwable throwable) {
+					// Handle the error
+					loginHandler.onLoginFailure();
+				}
+			});
+		} catch (RequestException e) {
+			// Handle the exception
 			loginHandler.onLoginFailure();
 		}
 	}
+
+	private Users parseUserJSON(String responseText) {
+		// Assuming the responseText is in JSON format
+		JSONObject jsonObject = JSONParser.parseStrict(responseText).isObject();
+		int id = (int) jsonObject.get("id").isNumber().doubleValue();
+		String firstName = jsonObject.get("firstName").isString().stringValue();
+		String lastName = jsonObject.get("lastName").isString().stringValue();
+		String email = jsonObject.get("emailId").isString().stringValue();
+		String psNo = jsonObject.get("psNo").isString().stringValue();
+		String role = jsonObject.get("role").isString().stringValue();
+		String contactNo = jsonObject.get("contactNo").isString().stringValue();
+		String password = jsonObject.get("password").isString().stringValue();
+
+		return new Users(id, firstName, lastName, email, psNo, role, contactNo, password);
+	}
+
 }

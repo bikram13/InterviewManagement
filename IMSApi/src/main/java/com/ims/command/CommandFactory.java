@@ -5,14 +5,16 @@ public class CommandFactory {
 
 		if (action != null) {
 			switch (action) {
-			case "getAllUsers":
-//	                    getAllUsers(request, response);
-				break;
+			case "getIinterviewerCandidateList":
+				return new InterviewerCandidateListCommand();
 			case "getAllCandidates":
 				return new GetAllCandidateCommand();
 
 			case "getFeedbackData":
 				return new GetFeedbackDataCommand();
+
+			case "login":
+				return new GetLoginDataCommand();
 
 			default:
 //	                    response.sendRedirect("index.jsp");

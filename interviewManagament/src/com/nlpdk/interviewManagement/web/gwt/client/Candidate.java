@@ -8,24 +8,17 @@ public class Candidate {
 	private String email;
 	private String psNo;
 	private String contactNo;
-	private List<String> interviewers;
-
-	public Candidate(int candidateId, String name, String email, String psNo, String contactNo,
-			List<String> interviewers) {
-		super();
-		this.candidateId = candidateId;
-		this.name = name;
-		this.email = email;
-		this.psNo = psNo;
-		this.contactNo = contactNo;
-		this.interviewers = interviewers;
-
-	}
+	private List<Users> interviewers;
 
 	// Getters and setters for the candidate fields
 
 	public String getName() {
 		return name;
+	}
+
+	public Candidate() {
+		super();
+		// TODO Auto-generated constructor stub
 	}
 
 	public void setName(String name) {
@@ -52,16 +45,27 @@ public class Candidate {
 		return contactNo;
 	}
 
-	public void setContactNo(String contactNo) {
+	public Candidate(int candidateId, String name, String email, String psNo, String contactNo,
+			List<Users> interviewers) {
+		super();
+		this.candidateId = candidateId;
+		this.name = name;
+		this.email = email;
+		this.psNo = psNo;
 		this.contactNo = contactNo;
+		this.interviewers = interviewers;
 	}
 
-	public List<String> getInterviewers() {
+	public List<Users> getInterviewers() {
 		return interviewers;
 	}
 
-	public void setInterviewers(List<String> interviewers) {
+	public void setInterviewers(List<Users> interviewers) {
 		this.interviewers = interviewers;
+	}
+
+	public void setContactNo(String contactNo) {
+		this.contactNo = contactNo;
 	}
 
 	public int getCandidateId() {
