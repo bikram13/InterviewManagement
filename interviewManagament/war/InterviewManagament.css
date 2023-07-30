@@ -1,0 +1,223 @@
+/* Global Styles */
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: #f7f7f7;
+  color: #333;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+}
+
+/* Welcome Message Styles */
+#welcome-message {
+  font-size: 18px;
+  text-align: left;
+  padding: 10px;
+  background-color: #f0f0f0;
+  color: #333;
+  font-weight: bold;
+  margin-bottom: 20px;
+  width: 100%;
+}
+.welcome-panel {
+  display: flex;
+  justify-content: space-between;
+  width: 100%; /* Set the panel to occupy the full width of the screen */
+  padding: 10px; /* Add some padding to the panel */
+  
+}
+
+.custom-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 2px solid #000; /* Outer border */
+}
+
+.custom-table td {
+  min-width: 100px;
+  padding: 8px;
+  border: 1px solid #000; /* Inner border */
+}
+
+.custom-table th {
+  padding: 8px;
+  border: 1px solid #000; /* Inner border */
+  background-color: #f0f0f0; /* Header background color */
+}
+
+.custom-table .gwt-Button.assign-button {
+  width: 120px;
+}
+
+.custom-table .interview-panel {
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.custom-table tr:first-child {
+  background-color: #c0c0c0; /* Header row background color */
+  font-weight: bold;
+}
+
+
+.add-candidate-button {
+  width: auto;
+  margin-left: 85%;
+  margin-bottom: 2%;
+}
+
+.close-button {
+  width: auto;
+  margin-left: 50%;
+  margin-top: 2%;
+}
+
+
+.logout{
+  width: auto;
+  margin-left: 85%;
+  margin-bottom: 2%;
+  padding: 10px;
+  background-color: #55f05f;
+  color: rgb(23, 22, 22);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  
+  /* Add Awesome Gradient */
+  /* background-image: linear-gradient(45deg, #ff6600, #e25800); */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  background-color: #e25800;
+  transition: background-color 0.3s;
+  /* Add Cool Hover Effect */
+  transform: scale(1.05);
+
+}
+table button {
+  width: 100%;
+  padding: 10px;
+  background-color: #55f05f;
+  color: rgb(23, 22, 22);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+  /* Add Awesome Gradient */
+  /* background-image: linear-gradient(45deg, #ff6600, #e25800); */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+table button:hover {
+  background-color: #e25800;
+  /* Add Cool Hover Effect */
+  transform: scale(1.05);
+}
+
+/* Ensure Button Text is Visible */
+table button span {
+  /* Set a lighter color for the text */
+  color: rgb(24, 23, 23);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  h3 {
+    font-size: 24px;
+  }
+}
+
+/* Header Styles */
+h3 {
+  text-align: center;
+  font-size: 28px;
+  margin-bottom: 20px;
+  color: #337ab7;
+}
+
+
+
+
+
+
+
+/* Popup Styles */
+.gwt-DialogBox {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background-color: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  padding: 20px;
+  max-width: 500px;
+  width: 90%;
+}
+
+.gwt-DialogBox .Caption {
+  font-size: 24px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.gwt-TextBox,.gwt-PasswordTextBox {
+  width: 90%;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
+.gwt-ListBox {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
+
+
+/* Header Styles */
+h3 {
+  text-align: center;
+  font-size: 28px;
+  margin-bottom: 20px;
+  color: #337ab7;
+}
+
+/* Form Styles */
+table {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+table div.gwt-Label {
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+table input {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+
+
+
+
+
